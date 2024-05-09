@@ -35,18 +35,18 @@ export class TasksService implements TasksServiceInterface {
   }
 
   update(task: Task, updateTaskRequest: UpdateTaskRequest): void {
-    try {
-      this.tasks[task.id - 1] = updateTaskRequest as Task;
-    } catch {
+    if (this.tasks.indexOf(task) === -1) {
       throw new Error(`Could not retrieve task ${task.id}`);
     }
+
+    this.tasks[task.id - 1] = updateTaskRequest;
   }
 
   delete(task: Task): void {
-    try {
-      this.tasks.splice(task.id - 1, 1);
-    } catch {
-      throw new Error(`Could not remove task ${task.id}`);
+    if (this.tasks.indexOf(task) === -1) {
+      throw new Error(`Could not retrieve task ${task.id}`);
     }
+
+    this.tasks.splice(task.id - 1, 1);
   }
 }
