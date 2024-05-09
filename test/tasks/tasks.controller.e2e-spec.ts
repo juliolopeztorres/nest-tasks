@@ -165,6 +165,10 @@ describe('TasksController (e2e)', () => {
     });
   });
 
+  it('should fail', () => {
+    expect(true).toBe(false);
+  });
+
   afterAll(async () => {
     await app.close();
   });
