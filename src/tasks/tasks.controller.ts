@@ -46,6 +46,10 @@ export class TasksController {
     @Param('id', PositiveNumberValidationPipe, GetTaskPipe) task: Task,
     @Body() updateTaskRequest: UpdateTaskRequest,
   ): void {
+    if (task.id !== updateTaskRequest.id) {
+      throw new HttpException('Content mismatch', HttpStatus.CONFLICT);
+    }
+
     this.tasksService.update(task, updateTaskRequest);
   }
 
