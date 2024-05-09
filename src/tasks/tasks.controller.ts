@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
   HttpException,
   HttpStatus,
   Inject,
@@ -40,6 +41,7 @@ export class TasksController {
   }
 
   @Put(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
   update(
     @Param('id', PositiveNumberValidationPipe, GetTaskPipe) task: Task,
     @Body() updateTaskRequest: UpdateTaskRequest,
@@ -48,6 +50,7 @@ export class TasksController {
   }
 
   @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
   delete(
     @Param('id', PositiveNumberValidationPipe, GetTaskPipe) task: Task,
   ): void {
