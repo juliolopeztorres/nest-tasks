@@ -7,7 +7,6 @@ import {
 } from '@nestjs/common';
 import { Task } from './task';
 import { TasksServiceInterface } from './tasks.service.interface';
-import { IsNumber } from 'class-validator';
 
 @Injectable()
 export class GetTaskPipe implements PipeTransform<number, Promise<Task>> {
@@ -16,7 +15,6 @@ export class GetTaskPipe implements PipeTransform<number, Promise<Task>> {
     private readonly taskService: TasksServiceInterface,
   ) {}
 
-  @IsNumber()
   async transform(id: number): Promise<Task> {
     try {
       return await this.taskService.get(id);

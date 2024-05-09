@@ -133,6 +133,30 @@ describe('TasksController (e2e)', () => {
         .expect(resCode)
         .expect(res);
     });
+
+    it('should fail with `id` content mismatching', async () => {
+      const createReq: CreateTaskRequest = {
+        description: 'my new task',
+      };
+
+      const req: UpdateTaskRequest = {
+        id: 18,
+        description: 'my description',
+      };
+
+      await request(app.getHttpServer())
+        .post('/tasks')
+        .send(createReq)
+        .expect(201);
+      await request(app.getHttpServer())
+        .get('/tasks')
+        .expect(200)
+        .expect([{ id: 1, description: 'my new task' }]);
+      await request(app.getHttpServer())
+        .put(`/tasks/${1}`)
+        .send(req)
+        .expect(409);
+    });
   });
 
   describe('/tasks/:id (DELETE)', () => {
