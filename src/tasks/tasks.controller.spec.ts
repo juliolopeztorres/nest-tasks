@@ -144,6 +144,18 @@ describe('TasksController', () => {
         'Not implemented',
       );
     });
+
+    it('should fail when `id` mismatch', async () => {
+      const tasksController = await getController(new TaskServiceSillyMock());
+
+      const request: UpdateTaskRequest = {
+        id: 20,
+        description: 'updated description',
+      };
+      expect(() =>
+        tasksController.update(Task.create(1, 'my task'), request),
+      ).toThrow('Content mismatch');
+    });
   });
 
   describe('delete', () => {
