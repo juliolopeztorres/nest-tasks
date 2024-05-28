@@ -1,52 +1,64 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { TasksServiceInterface } from './tasks.service.interface';
 import { Task } from './task';
 import { CreateTaskRequest } from './requests/create-task.request';
 import { UpdateTaskRequest } from './requests/update-task.request';
+import { TasksRepositoryInterface } from './tasks.repository.interface';
 
 @Injectable()
 export class TasksService implements TasksServiceInterface {
-  private tasks: Task[] = [];
+  constructor(
+    @Inject(TasksRepositoryInterface)
+    private readonly tasksRepository: TasksRepositoryInterface,
+  ) {}
 
-  getAll(): Promise<Task[]> {
-    return Promise.resolve(this.tasks);
+  async getAll(): Promise<Task[]> {
+    return this.tasksRepository.getAll();
   }
 
-  create(createTaskRequest: CreateTaskRequest): void {
+  async create(createTaskRequest: CreateTaskRequest): Promise<void> {
+    const tasks = await this.getAll();
     if (
-      this.tasks.some(
-        (task) => task.description === createTaskRequest.description,
-      )
+      tasks.some((task) => task.description === createTaskRequest.description)
     ) {
       throw new Error('Already existing task');
     }
 
-    this.tasks.push(
-      Task.create(this.tasks.length + 1, createTaskRequest.description),
+    await this.tasksRepository.add(
+      Task.create(tasks.length + 1, createTaskRequest.description),
     );
   }
 
-  get(id: number): Promise<Task> {
-    if (id == 0 || id > this.tasks.length) {
-      return Promise.reject(new Error(`Invalid id entered ${id}`));
+  async get(id: number): Promise<Task> {
+    const tasks = await this.getAll();
+
+    if (id == 0 || id > tasks.length) {
+      throw new Error(`Invalid id entered ${id}`);
     }
 
-    return Promise.resolve(this.tasks[id - 1]);
+    return tasks[id - 1];
   }
 
-  update(task: Task, updateTaskRequest: UpdateTaskRequest): void {
-    if (this.tasks.indexOf(task) === -1) {
+  async update(
+    task: Task,
+    updateTaskRequest: UpdateTaskRequest,
+  ): Promise<void> {
+    const tasks = await this.getAll();
+
+    if (tasks.indexOf(task) === -1) {
       throw new Error(`Could not retrieve task ${task.id}`);
     }
 
-    this.tasks[task.id - 1] = updateTaskRequest;
+    await this.tasksRepository.update(task.id - 1, updateTaskRequest);
   }
 
-  delete(task: Task): void {
-    if (this.tasks.indexOf(task) === -1) {
+  async delete(task: Task): Promise<void> {
+    const tasks = await this.getAll();
+
+    if (tasks.indexOf(task) === -1) {
       throw new Error(`Could not retrieve task ${task.id}`);
     }
 
-    this.tasks.splice(task.id - 1, 1);
+    await this.tasksRepository.delete(task.id - 1);
   }
 }

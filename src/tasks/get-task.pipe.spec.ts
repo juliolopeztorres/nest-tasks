@@ -10,23 +10,23 @@ describe('GetTaskPipe', () => {
       expect(
         await new GetTaskPipe(
           new (class implements TasksServiceInterface {
-            create(): void {
+            async create(): Promise<void> {
               throw new Error('Not implemented');
             }
 
-            delete(): void {
+            async delete(): Promise<void> {
               throw new Error('Not implemented');
             }
 
-            get(): Promise<Task> {
+            async get(): Promise<Task> {
               return Promise.resolve(task);
             }
 
-            getAll(): Promise<Task[]> {
+            async getAll(): Promise<Task[]> {
               throw new Error('Not implemented');
             }
 
-            update(): void {
+            async update(): Promise<void> {
               throw new Error('Not implemented');
             }
           })(),
@@ -38,25 +38,25 @@ describe('GetTaskPipe', () => {
       await expect(
         new GetTaskPipe(
           new (class implements TasksServiceInterface {
-            create(): void {
+            async create(): Promise<void> {
               throw new Error('Not implemented');
             }
 
-            delete(): void {
+            async delete(): Promise<void> {
               throw new Error('Not implemented');
             }
 
-            get(): Promise<Task> {
+            async get(): Promise<Task> {
               return Promise.reject(
                 new Error('Fail retrieving requested task'),
               );
             }
 
-            getAll(): Promise<Task[]> {
+            async getAll(): Promise<Task[]> {
               throw new Error('Not implemented');
             }
 
-            update(): void {
+            async update(): Promise<void> {
               throw new Error('Not implemented');
             }
           })(),

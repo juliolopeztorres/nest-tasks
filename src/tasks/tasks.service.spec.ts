@@ -2,22 +2,72 @@ import { TasksService } from './tasks.service';
 import { CreateTaskRequest } from './requests/create-task.request';
 import { Task } from './task';
 import { UpdateTaskRequest } from './requests/update-task.request';
+import { TasksRepositoryInterface } from './tasks.repository.interface';
 
 describe('TasksService', () => {
+  class TasksRepositorySillyMock implements TasksRepositoryInterface {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    add(task: Task): Promise<void> {
+      throw new Error('Not implemented');
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    delete(index: number): Promise<void> {
+      throw new Error('Not implemented');
+    }
+
+    getAll(): Promise<Task[]> {
+      throw new Error('Not implemented');
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    update(index: number, task: Task): Promise<void> {
+      throw new Error('Not implemented');
+    }
+  }
+
+  const getService = (
+    repository: TasksRepositoryInterface | null = null,
+  ): TasksService => {
+    return new TasksService(repository ?? new TasksRepositorySillyMock());
+  };
+
   describe('getAll', () => {
     it('should return current list value', async () => {
-      expect(await new TasksService().getAll()).toHaveLength(0);
+      expect(
+        await getService(
+          new (class extends TasksRepositorySillyMock {
+            getAll(): Promise<Task[]> {
+              return Promise.resolve([]);
+            }
+          })(),
+        ).getAll(),
+      ).toHaveLength(0);
     });
   });
 
   describe('create', () => {
     it('should append a new task', async () => {
-      const tasksService = new TasksService();
+      const tasksService = getService(
+        new (class extends TasksRepositorySillyMock {
+          private tasks: Task[] = [];
+
+          getAll(): Promise<Task[]> {
+            return Promise.resolve(this.tasks);
+          }
+
+          add(task: Task): Promise<void> {
+            this.tasks.push(task);
+
+            return Promise.resolve();
+          }
+        })(),
+      );
 
       const request: CreateTaskRequest = {
         description: 'my new task',
       };
-      tasksService.create(request);
+      await tasksService.create(request);
 
       const tasks = await tasksService.getAll();
       expect(tasks).toHaveLength(1);
@@ -25,14 +75,18 @@ describe('TasksService', () => {
     });
 
     it('should fail when appending a repeated task', async () => {
-      const tasksService = new TasksService();
+      const tasksService = getService(
+        new (class extends TasksRepositorySillyMock {
+          getAll(): Promise<Task[]> {
+            return Promise.resolve([Task.create(1, 'my new task')]);
+          }
+        })(),
+      );
 
       const request: CreateTaskRequest = {
         description: 'my new task',
       };
-      tasksService.create(request);
-
-      expect(() => tasksService.create(request)).toThrow(
+      await expect(tasksService.create(request)).rejects.toThrow(
         'Already existing task',
       );
     });
@@ -40,12 +94,13 @@ describe('TasksService', () => {
 
   describe('get', () => {
     it('should get task by id', async () => {
-      const tasksService = new TasksService();
-
-      const request: CreateTaskRequest = {
-        description: 'my new task',
-      };
-      tasksService.create(request);
+      const tasksService = getService(
+        new (class extends TasksRepositorySillyMock {
+          getAll(): Promise<Task[]> {
+            return Promise.resolve([Task.create(1, 'my new task')]);
+          }
+        })(),
+      );
 
       const task = await tasksService.get(1);
       expect(task).toEqual(Task.create(1, 'my new task'));
@@ -56,26 +111,41 @@ describe('TasksService', () => {
       ${0}
       ${18}
     `('should fail with different `id` conditions $a', async ({ id }) => {
-      await expect(new TasksService().get(id)).rejects.toThrow(
-        `Invalid id entered ${id}`,
-      );
+      await expect(
+        getService(
+          new (class extends TasksRepositorySillyMock {
+            getAll(): Promise<Task[]> {
+              return Promise.resolve([]);
+            }
+          })(),
+        ).get(id),
+      ).rejects.toThrow(`Invalid id entered ${id}`);
     });
   });
 
   describe('update', () => {
     it('should update task with valid input data', async () => {
-      const tasksService = new TasksService();
+      const tasksService = getService(
+        new (class extends TasksRepositorySillyMock {
+          private tasks: Task[] = [Task.create(1, 'my new task')];
 
-      const createRequest: CreateTaskRequest = {
-        description: 'my new task',
-      };
-      tasksService.create(createRequest);
+          getAll(): Promise<Task[]> {
+            return Promise.resolve(this.tasks);
+          }
+
+          update(index: number, task: Task): Promise<void> {
+            this.tasks[index] = task;
+
+            return Promise.resolve();
+          }
+        })(),
+      );
 
       const request: UpdateTaskRequest = {
         id: 1,
         description: 'updated desc',
       };
-      tasksService.update(await tasksService.get(1), request);
+      await tasksService.update(await tasksService.get(1), request);
 
       expect(await tasksService.getAll()).toEqual([
         Task.create(1, 'updated desc'),
@@ -83,43 +153,64 @@ describe('TasksService', () => {
     });
 
     it('should fail with wrong input', async () => {
-      const tasksService = new TasksService();
+      const tasksService = getService(
+        new (class extends TasksRepositorySillyMock {
+          getAll(): Promise<Task[]> {
+            return Promise.resolve([]);
+          }
+        })(),
+      );
 
       const request: UpdateTaskRequest = {
         id: 1,
         description: 'updated desc',
       };
 
-      expect(() =>
+      await expect(
         tasksService.update(Task.create(99, 'non existing task'), request),
-      ).toThrow('Could not retrieve task 99');
+      ).rejects.toThrow('Could not retrieve task 99');
     });
   });
 
   describe('delete', () => {
     it('should delete task', async () => {
-      const tasksService = new TasksService();
+      const tasksService = getService(
+        new (class extends TasksRepositorySillyMock {
+          private tasks: Task[] = [Task.create(1, 'my new task')];
 
-      const request: CreateTaskRequest = {
-        description: 'my new task',
-      };
-      tasksService.create(request);
+          getAll(): Promise<Task[]> {
+            return Promise.resolve(this.tasks);
+          }
+
+          delete(index: number): Promise<void> {
+            this.tasks.splice(index, 1);
+
+            return Promise.resolve();
+          }
+        })(),
+      );
 
       expect(await tasksService.getAll()).toHaveLength(1);
 
       const task = await tasksService.get(1);
 
-      tasksService.delete(task);
+      await tasksService.delete(task);
 
       expect(await tasksService.getAll()).toHaveLength(0);
     });
 
     it('should fail with wrong input', async () => {
-      const tasksService = new TasksService();
+      const tasksService = getService(
+        new (class extends TasksRepositorySillyMock {
+          getAll(): Promise<Task[]> {
+            return Promise.resolve([]);
+          }
+        })(),
+      );
 
-      expect(() =>
+      await expect(
         tasksService.delete(Task.create(99, 'non existing task')),
-      ).toThrow('Could not retrieve task 99');
+      ).rejects.toThrow('Could not retrieve task 99');
     });
   });
 });

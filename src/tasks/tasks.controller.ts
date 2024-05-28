@@ -26,14 +26,14 @@ export class TasksController {
   ) {}
 
   @Get()
-  get(): Promise<Task[]> {
-    return this.tasksService.getAll();
+  async get(): Promise<Task[]> {
+    return await this.tasksService.getAll();
   }
 
   @Post()
-  create(@Body() createTaskRequest: CreateTaskRequest): void {
+  async create(@Body() createTaskRequest: CreateTaskRequest): Promise<void> {
     try {
-      this.tasksService.create(createTaskRequest);
+      await this.tasksService.create(createTaskRequest);
     } catch (error) {
       console.log('Error creating new task', createTaskRequest, error);
       throw new HttpException('Bad input data', HttpStatus.BAD_REQUEST);
@@ -42,22 +42,22 @@ export class TasksController {
 
   @Put(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  update(
+  async update(
     @Param('id', PositiveNumberValidationPipe, GetTaskPipe) task: Task,
     @Body() updateTaskRequest: UpdateTaskRequest,
-  ): void {
+  ): Promise<void> {
     if (task.id !== updateTaskRequest.id) {
       throw new HttpException('Content mismatch', HttpStatus.CONFLICT);
     }
 
-    this.tasksService.update(task, updateTaskRequest);
+    await this.tasksService.update(task, updateTaskRequest);
   }
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  delete(
+  async delete(
     @Param('id', PositiveNumberValidationPipe, GetTaskPipe) task: Task,
-  ): void {
-    this.tasksService.delete(task);
+  ): Promise<void> {
+    await this.tasksService.delete(task);
   }
 }

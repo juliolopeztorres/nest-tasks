@@ -8,23 +8,23 @@ import { UpdateTaskRequest } from './requests/update-task.request';
 
 describe('TasksController', () => {
   class TaskServiceSillyMock implements TasksServiceInterface {
-    create(): void {
+    async create(): Promise<void> {
       throw new Error('Not implemented');
     }
 
-    delete(): void {
+    async delete(): Promise<void> {
       throw new Error('Not implemented');
     }
 
-    get(): Promise<Task> {
+    async get(): Promise<Task> {
       throw new Error('Not implemented');
     }
 
-    getAll(): Promise<Task[]> {
+    async getAll(): Promise<Task[]> {
       throw new Error('Not implemented');
     }
 
-    update(): void {
+    async update(): Promise<void> {
       throw new Error('Not implemented');
     }
   }
@@ -68,7 +68,7 @@ describe('TasksController', () => {
   describe('create', () => {
     it('should not fail with valid data', async () => {
       const service = new (class extends TaskServiceSillyMock {
-        create() {
+        async create() {
           // Does nothing
         }
       })();
@@ -78,7 +78,7 @@ describe('TasksController', () => {
       const tasksController = await getController(service);
 
       const request: CreateTaskRequest = { description: 'my description' };
-      tasksController.create(request);
+      await tasksController.create(request);
       expect(createSpy).toHaveBeenCalledTimes(1);
       expect(createSpy).toHaveBeenCalledWith(request);
     });
@@ -103,7 +103,9 @@ describe('TasksController', () => {
       const request: CreateTaskRequest = {
         description: 'my description',
       };
-      expect(() => tasksController.create(request)).toThrow('Bad input data');
+      await expect(tasksController.create(request)).rejects.toThrow(
+        'Bad input data',
+      );
       expect(logSpy).toHaveBeenCalledTimes(1);
     });
   });
@@ -111,7 +113,7 @@ describe('TasksController', () => {
   describe('update', () => {
     it('should not fail with valid data', async () => {
       const service = new (class extends TaskServiceSillyMock {
-        update() {
+        async update() {
           // Does nothing
         }
       })();
@@ -125,7 +127,7 @@ describe('TasksController', () => {
         id: 1,
         description: 'my other description',
       };
-      tasksController.update(task, request);
+      await tasksController.update(task, request);
 
       expect(updateSpy).toHaveBeenCalledTimes(1);
       expect(updateSpy).toHaveBeenCalledWith(task, request);
@@ -140,7 +142,7 @@ describe('TasksController', () => {
         description: 'my other description',
       };
 
-      expect(() => tasksController.update(task, request)).toThrow(
+      await expect(tasksController.update(task, request)).rejects.toThrow(
         'Not implemented',
       );
     });
@@ -152,16 +154,16 @@ describe('TasksController', () => {
         id: 20,
         description: 'updated description',
       };
-      expect(() =>
+      await expect(
         tasksController.update(Task.create(1, 'my task'), request),
-      ).toThrow('Content mismatch');
+      ).rejects.toThrow('Content mismatch');
     });
   });
 
   describe('delete', () => {
     it('should not fail with valid data', async () => {
       const service = new (class extends TaskServiceSillyMock {
-        delete() {
+        async delete() {
           // Does nothing
         }
       })();
@@ -171,7 +173,7 @@ describe('TasksController', () => {
       const tasksController = await getController(service);
 
       const task = Task.create(1, 'my description');
-      tasksController.delete(task);
+      await tasksController.delete(task);
 
       expect(deleteSpy).toHaveBeenCalledTimes(1);
       expect(deleteSpy).toHaveBeenCalledWith(task);
@@ -180,9 +182,9 @@ describe('TasksController', () => {
     it('should fail when service does', async () => {
       const tasksController = await getController(new TaskServiceSillyMock());
 
-      expect(() =>
+      await expect(
         tasksController.delete(Task.create(1, 'my description')),
-      ).toThrow('Not implemented');
+      ).rejects.toThrow('Not implemented');
     });
   });
 });
