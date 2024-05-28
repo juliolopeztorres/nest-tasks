@@ -4,18 +4,30 @@ import * as request from 'supertest';
 import { AppModule } from '../../src/app.module';
 import { CreateTaskRequest } from '../../src/tasks/requests/create-task.request';
 import { UpdateTaskRequest } from '../../src/tasks/requests/update-task.request';
+import { TaskEntity } from '../../src/tasks/entity/task.entity';
+import { Repository } from 'typeorm';
+import { getRepositoryToken } from '@nestjs/typeorm';
+// import { TasksRepositoryInterface } from '../../src/tasks/tasks.repository.interface';
+// import { TasksDbRepository } from '../../src/tasks/tasks-db.repository';
+// import { TasksMemoryRepository } from '../../src/tasks/tasks-memory.repository';
 
-describe('TasksController (e2e)', () => {
+describe('TasksController with db (e2e)', () => {
   let app: INestApplication;
+  let repo: Repository<TaskEntity>;
 
   beforeEach(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
-    }).compile();
+    })
+      // .overrideProvider(TasksRepositoryInterface)
+      // .useClass(TasksMemoryRepository)
+      .compile();
 
     app = moduleFixture.createNestApplication();
     app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
     await app.init();
+
+    repo = app.get(getRepositoryToken(TaskEntity));
   });
 
   describe('/tasks (GET)', () => {
@@ -187,6 +199,10 @@ describe('TasksController (e2e)', () => {
         .expect(resCode)
         .expect(res);
     });
+  });
+
+  afterEach(() => {
+    repo.clear();
   });
 
   afterAll(async () => {

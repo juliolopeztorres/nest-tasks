@@ -45,7 +45,7 @@ export class TasksService implements TasksServiceInterface {
   ): Promise<void> {
     const tasks = await this.getAll();
 
-    if (tasks.indexOf(task) === -1) {
+    if (tasks.findIndex((taskItem) => taskItem.id === task.id) === -1) {
       throw new Error(`Could not retrieve task ${task.id}`);
     }
 
@@ -55,7 +55,7 @@ export class TasksService implements TasksServiceInterface {
   async delete(task: Task): Promise<void> {
     const tasks = await this.getAll();
 
-    if (tasks.indexOf(task) === -1) {
+    if (tasks.findIndex((taskItem) => taskItem.id === task.id) === -1) {
       throw new Error(`Could not retrieve task ${task.id}`);
     }
 
