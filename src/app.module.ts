@@ -6,7 +6,8 @@ import { TasksRepositoryInterface } from './tasks/tasks.repository.interface';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { TaskEntity } from './tasks/entity/task.entity';
 import { TasksDbRepository } from './tasks/tasks-db.repository';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ConfigModule } from '@nestjs/config';
+import { TypeOrmConfigService } from './data-source.config';
 
 @Module({
   imports: [
@@ -15,16 +16,8 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
         process.env.NODE_ENV && process.env.NODE_ENV === 'test'
           ? '.env.test'
           : '.env',
-      isGlobal: true,
     }),
-    TypeOrmModule.forRootAsync({
-      inject: [ConfigService],
-      useFactory: (configService: ConfigService) => ({
-        type: 'sqlite',
-        database: configService.get<string>('DB_PATH'),
-        entities: [TaskEntity],
-      }),
-    }),
+    TypeOrmModule.forRootAsync({ useClass: TypeOrmConfigService }),
     TypeOrmModule.forFeature([TaskEntity]),
   ],
   controllers: [TasksController],
