@@ -1,5 +1,11 @@
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
+export enum TaskStatus {
+  TODO = 'todo',
+  DOING = 'doing',
+  DONE = 'done',
+}
+
 @Entity()
 export class TaskEntity {
   @PrimaryGeneratedColumn('uuid')
@@ -10,4 +16,7 @@ export class TaskEntity {
 
   @Column()
   description: string;
+
+  @Column({ default: TaskStatus.TODO })
+  status: TaskStatus;
 }

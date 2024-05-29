@@ -20,7 +20,18 @@
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "prepare": "husky",
     "precommit": "lint-staged",
-    "prepush": "npm run test && npm run test:e2e"
+    "prepush": "npm run test && npm run test:e2e",
+    "typeorm": "typeorm-ts-node-commonjs",
+    "typeorm:source": "npm run typeorm -- --dataSource ./src/data-source.config.ts",
+    "typeorm:migrations:generate": "npm run typeorm:source -- migration:generate",
+    "typeorm:migrations:run": "npm run typeorm:source -- migration:run",
+    "typeorm:migrations:revert": "npm run typeorm:source -- migration:revert",
+    "typeorm:migrations:show": "npm run typeorm:source -- migration:show",
+    "typeorm:prod": "typeorm",
+    "typeorm:prod:source": "npm run typeorm:prod -- --dataSource ./dist/data-source.config.js",
+    "typeorm:prod:migrations:run": "npm run typeorm:prod:source -- migration:run",
+    "typeorm:prod:migrations:revert": "npm run typeorm:prod:source -- migration:revert",
+    "typeorm:prod:migrations:show": "npm run typeorm:prod:source -- migration:show"
   },
   "dependencies": {
     "@nestjs/common": "^10.0.0",
