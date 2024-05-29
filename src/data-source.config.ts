@@ -7,7 +7,9 @@ import { TypeOrmModuleOptions, TypeOrmOptionsFactory } from '@nestjs/typeorm';
 import { SqliteConnectionOptions } from 'typeorm/driver/sqlite/SqliteConnectionOptions'; // Transient dependency of `TypeORM`
 import { AddTaskStatus1716969462615 } from './migrations/1716969462615-add-task-status';
 
-configDotenv();
+configDotenv({
+  path: `.env${process.env.NODE_ENV && process.env.NODE_ENV === 'test' ? '.test' : ''}`,
+});
 
 const dataSourceOptions: SqliteConnectionOptions = {
   type: 'sqlite',

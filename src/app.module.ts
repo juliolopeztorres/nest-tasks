@@ -12,10 +12,7 @@ import { TypeOrmConfigService } from './data-source.config';
 @Module({
   imports: [
     ConfigModule.forRoot({
-      envFilePath:
-        process.env.NODE_ENV && process.env.NODE_ENV === 'test'
-          ? '.env.test'
-          : '.env',
+      envFilePath: `.env${process.env.NODE_ENV && process.env.NODE_ENV === 'test' ? '.test' : ''}`,
     }),
     TypeOrmModule.forRootAsync({ useClass: TypeOrmConfigService }),
     TypeOrmModule.forFeature([TaskEntity]),
