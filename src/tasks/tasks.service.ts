@@ -4,12 +4,15 @@ import { Task } from './task';
 import { CreateTaskRequest } from './requests/create-task.request';
 import { UpdateTaskRequest } from './requests/update-task.request';
 import { TasksRepositoryInterface } from './tasks.repository.interface';
+import { UsersServiceInterface } from '../users/users.service.interface';
 
 @Injectable()
 export class TasksService implements TasksServiceInterface {
   constructor(
     @Inject(TasksRepositoryInterface)
     private readonly tasksRepository: TasksRepositoryInterface,
+    @Inject(UsersServiceInterface)
+    private readonly usersService: UsersServiceInterface,
   ) {}
 
   async getAll(): Promise<Task[]> {
@@ -26,6 +29,7 @@ export class TasksService implements TasksServiceInterface {
 
     await this.tasksRepository.add(
       Task.create(tasks.length + 1, createTaskRequest.description),
+      await this.usersService.getByEmail(createTaskRequest.userEmail),
     );
   }
 

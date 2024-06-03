@@ -1,9 +1,10 @@
 import { Task } from './task';
+import { User } from '../users/user';
 
 export interface TasksRepositoryInterface {
   getAll(): Promise<Task[]>;
 
-  add(task: Task): Promise<void>;
+  add(task: Task, user: User): Promise<void>;
 
   update(index: number, task: Task): Promise<void>;
 
