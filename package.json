@@ -27,6 +27,8 @@
     "typeorm:migrations:run": "npm run typeorm:source -- migration:run",
     "typeorm:migrations:revert": "npm run typeorm:source -- migration:revert",
     "typeorm:migrations:show": "npm run typeorm:source -- migration:show",
+    "fixtures:load": "ts-node ./bin/fixtures.load.ts",
+    "fixtures:clear": "ts-node ./bin/fixtures.clear.ts",
     "typeorm:prod": "typeorm",
     "typeorm:prod:source": "npm run typeorm:prod -- --dataSource ./dist/data-source.config.js",
     "typeorm:prod:migrations:run": "npm run typeorm:prod:source -- migration:run",
@@ -92,7 +94,8 @@
     "coveragePathIgnorePatterns": [
       "app.module.ts",
       "data-source.config.ts",
-      "main.ts"
+      "main.ts",
+      "migrations/*"
     ],
     "coverageDirectory": "../coverage",
     "testEnvironment": "node"
