@@ -8,6 +8,12 @@ import { TaskEntity } from './tasks/entity/task.entity';
 import { TasksDbRepository } from './tasks/tasks-db.repository';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmConfigService } from './data-source.config';
+import { UsersServiceInterface } from './users/users.service.interface';
+import { UsersService } from './users/users.service';
+import { UsersRepositoryInterface } from './users/users.repository.interface';
+import { UsersRepository } from './users/users.repository';
+import { UsersController } from './users/users.controller';
+import { UserEntity } from './users/entity/user.entity';
 
 @Module({
   imports: [
@@ -15,10 +21,14 @@ import { TypeOrmConfigService } from './data-source.config';
       envFilePath: `.env${process.env.NODE_ENV && process.env.NODE_ENV === 'test' ? '.test' : ''}`,
     }),
     TypeOrmModule.forRootAsync({ useClass: TypeOrmConfigService }),
-    TypeOrmModule.forFeature([TaskEntity]),
+    TypeOrmModule.forFeature([TaskEntity, UserEntity]),
   ],
-  controllers: [TasksController],
+  controllers: [TasksController, UsersController],
   providers: [
+    {
+      provide: UsersRepositoryInterface,
+      useClass: UsersRepository,
+    },
     {
       provide: TasksRepositoryInterface,
       useClass: TasksDbRepository,
@@ -26,6 +36,10 @@ import { TypeOrmConfigService } from './data-source.config';
     {
       provide: TasksServiceInterface,
       useClass: TasksService,
+    },
+    {
+      provide: UsersServiceInterface,
+      useClass: UsersService,
     },
   ],
 })
