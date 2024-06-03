@@ -3,11 +3,13 @@ import { CreateTaskRequest } from './requests/create-task.request';
 import { Task } from './task';
 import { UpdateTaskRequest } from './requests/update-task.request';
 import { TasksRepositoryInterface } from './tasks.repository.interface';
+import { UsersRepositoryInterface } from '../users/users.repository.interface';
+import { User } from '../users/user';
 
 describe('TasksService', () => {
   class TasksRepositorySillyMock implements TasksRepositoryInterface {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    add(task: Task): Promise<void> {
+    add(task: Task, user: User): Promise<void> {
       throw new Error('Not implemented');
     }
 
@@ -26,10 +28,25 @@ describe('TasksService', () => {
     }
   }
 
+  class UsersRepositorySillyMock implements UsersRepositoryInterface {
+    getAll(): Promise<User[]> {
+      throw new Error('Not implemented');
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    getByEmail(email: string): Promise<User> {
+      throw new Error('Not implemented');
+    }
+  }
+
   const getService = (
     repository: TasksRepositoryInterface | null = null,
+    userRepository: UsersRepositoryInterface | null = null,
   ): TasksService => {
-    return new TasksService(repository ?? new TasksRepositorySillyMock());
+    return new TasksService(
+      repository ?? new TasksRepositorySillyMock(),
+      userRepository ?? new UsersRepositorySillyMock(),
+    );
   };
 
   describe('getAll', () => {
@@ -56,22 +73,30 @@ describe('TasksService', () => {
             return Promise.resolve(this.tasks);
           }
 
-          add(task: Task): Promise<void> {
-            this.tasks.push(task);
+          add(task: Task, user: User): Promise<void> {
+            this.tasks.push(Task.create(task.id, task.description, user.email));
 
             return Promise.resolve();
+          }
+        })(),
+        new (class extends UsersRepositorySillyMock {
+          getByEmail(email: string): Promise<User> {
+            return Promise.resolve(User.create('1234-5678', email));
           }
         })(),
       );
 
       const request: CreateTaskRequest = {
         description: 'my new task',
+        userEmail: 'test@test.es',
       };
       await tasksService.create(request);
 
       const tasks = await tasksService.getAll();
       expect(tasks).toHaveLength(1);
-      expect(tasks).toContainEqual(Task.create(1, 'my new task'));
+      expect(tasks).toContainEqual(
+        Task.create(1, 'my new task', 'test@test.es'),
+      );
     });
 
     it('should fail when appending a repeated task', async () => {
@@ -85,6 +110,7 @@ describe('TasksService', () => {
 
       const request: CreateTaskRequest = {
         description: 'my new task',
+        userEmail: 'test@test.es',
       };
       await expect(tasksService.create(request)).rejects.toThrow(
         'Already existing task',

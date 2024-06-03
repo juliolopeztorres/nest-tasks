@@ -77,7 +77,10 @@ describe('TasksController', () => {
 
       const tasksController = await getController(service);
 
-      const request: CreateTaskRequest = { description: 'my description' };
+      const request: CreateTaskRequest = {
+        description: 'my description',
+        userEmail: 'test@test.es',
+      };
       await tasksController.create(request);
       expect(createSpy).toHaveBeenCalledTimes(1);
       expect(createSpy).toHaveBeenCalledWith(request);
@@ -102,6 +105,7 @@ describe('TasksController', () => {
 
       const request: CreateTaskRequest = {
         description: 'my description',
+        userEmail: 'test@test.es',
       };
       await expect(tasksController.create(request)).rejects.toThrow(
         'Bad input data',

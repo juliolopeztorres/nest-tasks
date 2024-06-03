@@ -7,6 +7,7 @@ import { UpdateTaskRequest } from '../../src/tasks/requests/update-task.request'
 import { TaskEntity } from '../../src/tasks/entity/task.entity';
 import { Repository } from 'typeorm';
 import { getRepositoryToken } from '@nestjs/typeorm';
+import { UserEntity } from '../../src/users/entity/user.entity';
 // import { TasksRepositoryInterface } from '../../src/tasks/tasks.repository.interface';
 // import { TasksDbRepository } from '../../src/tasks/tasks-db.repository';
 // import { TasksMemoryRepository } from '../../src/tasks/tasks-memory.repository';
@@ -14,6 +15,7 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 describe('TasksController with db (e2e)', () => {
   let app: INestApplication;
   let repo: Repository<TaskEntity>;
+  let userRepo: Repository<UserEntity>;
 
   beforeEach(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -28,6 +30,12 @@ describe('TasksController with db (e2e)', () => {
     await app.init();
 
     repo = app.get(getRepositoryToken(TaskEntity));
+    userRepo = app.get(getRepositoryToken(UserEntity));
+
+    const user = new UserEntity();
+    user.uid = '1234-5678';
+    user.email = 'test@test.es';
+    await userRepo.insert(user);
   });
 
   describe('/tasks (GET)', () => {
@@ -40,18 +48,20 @@ describe('TasksController with db (e2e)', () => {
     it('can create new task', async () => {
       const req: CreateTaskRequest = {
         description: 'my new task',
+        userEmail: 'test@test.es',
       };
 
       await request(app.getHttpServer()).post('/tasks').send(req).expect(201);
       await request(app.getHttpServer())
         .get('/tasks')
         .expect(200)
-        .expect([{ id: 1, description: 'my new task' }]);
+        .expect([{ id: 1, description: 'my new task', user: 'test@test.es' }]);
     });
 
     it('fails to create duplicated task', async () => {
       const req: CreateTaskRequest = {
         description: 'my new task',
+        userEmail: 'test@test.es',
       };
 
       await request(app.getHttpServer()).post('/tasks').send(req).expect(201);
@@ -61,12 +71,12 @@ describe('TasksController with db (e2e)', () => {
     test.each`
       message | req | res
       ${'blank request'} | ${{}} | ${{
-  message: ['description must be a string', 'description should not be empty'],
+  message: ['description must be a string', 'description should not be empty', 'userEmail must be a string', 'userEmail should not be empty'],
   error: 'Bad Request',
   statusCode: 400,
 }}
-      ${'description wrong type'} | ${{ description: 18 }} | ${{
-  message: ['description must be a string'],
+      ${'description and userEmail wrong type'} | ${{ description: 18, userEmail: 24 }} | ${{
+  message: ['description must be a string', 'userEmail must be a string'],
   error: 'Bad Request',
   statusCode: 400,
 }}
@@ -83,6 +93,7 @@ describe('TasksController with db (e2e)', () => {
     it('can edit existing task', async () => {
       const createReq: CreateTaskRequest = {
         description: 'my new task',
+        userEmail: 'test@test.es',
       };
 
       const req: UpdateTaskRequest = {
@@ -96,7 +107,7 @@ describe('TasksController with db (e2e)', () => {
       await request(app.getHttpServer())
         .get('/tasks')
         .expect(200)
-        .expect([{ id: 1, description: 'my new task' }]);
+        .expect([{ id: 1, description: 'my new task', user: 'test@test.es' }]);
       await request(app.getHttpServer())
         .put(`/tasks/${1}`)
         .send(req)
@@ -104,7 +115,13 @@ describe('TasksController with db (e2e)', () => {
       await request(app.getHttpServer())
         .get('/tasks')
         .expect(200)
-        .expect([{ id: 1, description: 'my brand new description' }]);
+        .expect([
+          {
+            id: 1,
+            description: 'my brand new description',
+            user: 'test@test.es',
+          },
+        ]);
     });
 
     test.each`
@@ -149,6 +166,7 @@ describe('TasksController with db (e2e)', () => {
     it('should fail with `id` content mismatching', async () => {
       const createReq: CreateTaskRequest = {
         description: 'my new task',
+        userEmail: 'test@test.es',
       };
 
       const req: UpdateTaskRequest = {
@@ -163,7 +181,7 @@ describe('TasksController with db (e2e)', () => {
       await request(app.getHttpServer())
         .get('/tasks')
         .expect(200)
-        .expect([{ id: 1, description: 'my new task' }]);
+        .expect([{ id: 1, description: 'my new task', user: 'test@test.es' }]);
       await request(app.getHttpServer())
         .put(`/tasks/${1}`)
         .send(req)
@@ -175,6 +193,7 @@ describe('TasksController with db (e2e)', () => {
     it('can remove existing task', async () => {
       const createReq: CreateTaskRequest = {
         description: 'my new task',
+        userEmail: 'test@test.es',
       };
 
       await request(app.getHttpServer())
@@ -184,7 +203,7 @@ describe('TasksController with db (e2e)', () => {
       await request(app.getHttpServer())
         .get('/tasks')
         .expect(200)
-        .expect([{ id: 1, description: 'my new task' }]);
+        .expect([{ id: 1, description: 'my new task', user: 'test@test.es' }]);
       await request(app.getHttpServer()).delete(`/tasks/${1}`).expect(204);
       await request(app.getHttpServer()).get('/tasks').expect(200).expect([]);
     });
@@ -203,6 +222,7 @@ describe('TasksController with db (e2e)', () => {
 
   afterEach(() => {
     repo.clear();
+    userRepo.clear();
   });
 
   afterAll(async () => {
