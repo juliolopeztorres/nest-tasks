@@ -34,4 +34,8 @@ export class TaskEntity {
 
     return entity;
   }
+
+  static create(id: number, description: string, user: UserEntity): TaskEntity {
+    return this.createFromTask(Task.create(id, description), user);
+  }
 }
