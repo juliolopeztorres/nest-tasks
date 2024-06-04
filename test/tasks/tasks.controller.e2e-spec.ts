@@ -32,10 +32,7 @@ describe('TasksController with db (e2e)', () => {
     repo = app.get(getRepositoryToken(TaskEntity));
     userRepo = app.get(getRepositoryToken(UserEntity));
 
-    const user = new UserEntity();
-    user.uid = '1234-5678';
-    user.email = 'test@test.es';
-    await userRepo.insert(user);
+    await userRepo.insert(UserEntity.create('test@test.es'));
   });
 
   describe('/tasks (GET)', () => {

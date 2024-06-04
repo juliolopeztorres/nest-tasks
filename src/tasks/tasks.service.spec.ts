@@ -3,8 +3,8 @@ import { CreateTaskRequest } from './requests/create-task.request';
 import { Task } from './task';
 import { UpdateTaskRequest } from './requests/update-task.request';
 import { TasksRepositoryInterface } from './tasks.repository.interface';
-import { UsersRepositoryInterface } from '../users/users.repository.interface';
 import { User } from '../users/user';
+import { UsersServiceInterface } from '../users/users.service.interface';
 
 describe('TasksService', () => {
   class TasksRepositorySillyMock implements TasksRepositoryInterface {
@@ -28,7 +28,7 @@ describe('TasksService', () => {
     }
   }
 
-  class UsersRepositorySillyMock implements UsersRepositoryInterface {
+  class UsersServiceSillyMock implements UsersServiceInterface {
     getAll(): Promise<User[]> {
       throw new Error('Not implemented');
     }
@@ -41,11 +41,11 @@ describe('TasksService', () => {
 
   const getService = (
     repository: TasksRepositoryInterface | null = null,
-    userRepository: UsersRepositoryInterface | null = null,
+    userService: UsersServiceInterface | null = null,
   ): TasksService => {
     return new TasksService(
       repository ?? new TasksRepositorySillyMock(),
-      userRepository ?? new UsersRepositorySillyMock(),
+      userService ?? new UsersServiceSillyMock(),
     );
   };
 
@@ -79,7 +79,7 @@ describe('TasksService', () => {
             return Promise.resolve();
           }
         })(),
-        new (class extends UsersRepositorySillyMock {
+        new (class extends UsersServiceSillyMock {
           getByEmail(email: string): Promise<User> {
             return Promise.resolve(User.create('1234-5678', email));
           }

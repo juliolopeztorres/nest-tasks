@@ -25,6 +25,6 @@ export class UsersRepository implements UsersRepositoryInterface {
       throw new Error(`No user was found with email ${email}`);
     }
 
-    return user;
+    return User.create(user.uid, user.email);
   }
 }

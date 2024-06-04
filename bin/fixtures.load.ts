@@ -13,8 +13,7 @@ type UsersType = {
 
 async function createUsers(manager: EntityManager): Promise<UsersType> {
   logger.log('Inserting user `test@test.es`...');
-  const user = new UserEntity();
-  user.email = 'test@test.es';
+  const user = UserEntity.create('test@test.es');
 
   await manager.save(user);
 
@@ -28,11 +27,11 @@ async function createTasks(manager: EntityManager, users: UsersType) {
 
   const tasks: TaskEntity[] = [];
   for (let i: number = 0; i < 10; i++) {
-    const task = new TaskEntity();
-
-    task.id = i + 1;
-    task.description = `This is the task number ${i + 1}`;
-    task.user = Promise.resolve(users.testUser);
+    const task = TaskEntity.create(
+      i + 1,
+      `This is the task number ${i + 1}`,
+      users.testUser,
+    );
     task.status = Math.random() > 0.5 ? TaskStatus.DONE : TaskStatus.TODO;
 
     tasks.push(task);

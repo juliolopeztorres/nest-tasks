@@ -29,6 +29,12 @@ const ormRepositoryMock = {
 };
 
 describe('TaskDbRepository', () => {
+  const userEntity = UserEntity.create('test@test.es');
+  userEntity.uid = '1234-5678';
+
+  const taskEntity = TaskEntity.create(1, 'my entity task', userEntity);
+  taskEntity.uid = '1234-1234-1234-1234';
+
   const getRepository = async (
     repository: RepositoryMock<TaskEntity>,
   ): Promise<TasksDbRepository> => {
@@ -75,16 +81,6 @@ describe('TaskDbRepository', () => {
 
   describe('getAll', () => {
     it('should call find and map results', async () => {
-      const userEntity = new UserEntity();
-      userEntity.uid = '1234-5678';
-      userEntity.email = 'test@test.es';
-
-      const taskEntity = new TaskEntity();
-      taskEntity.uid = '1234-1234-1234-1234';
-      taskEntity.id = 1;
-      taskEntity.description = 'my entity task';
-      taskEntity.user = Promise.resolve(userEntity);
-
       ormRepositoryMock.find.mockImplementationOnce(() => [taskEntity]);
 
       const findSpy = jest.spyOn(ormRepositoryMock, 'find');
@@ -103,21 +99,12 @@ describe('TaskDbRepository', () => {
 
   describe('update', () => {
     it('should call findOneBy and save', async () => {
-      const userEntity = new UserEntity();
-      userEntity.uid = '1234-5678';
-      userEntity.email = 'test@test.es';
-
-      const taskEntity = new TaskEntity();
-      taskEntity.uid = '1234-1234-1234-1234';
-      taskEntity.id = 1;
-      taskEntity.description = 'my entity task';
-      taskEntity.user = Promise.resolve(userEntity);
-
-      const taskEntityUpdated = new TaskEntity();
+      const taskEntityUpdated = TaskEntity.create(
+        taskEntity.id,
+        'my new description',
+        await taskEntity.user,
+      );
       taskEntityUpdated.uid = taskEntity.uid;
-      taskEntityUpdated.id = taskEntity.id;
-      taskEntityUpdated.description = 'my new description';
-      taskEntityUpdated.user = taskEntity.user;
 
       ormRepositoryMock.findOneBy.mockImplementationOnce(() => taskEntity);
 
